@@ -2,7 +2,11 @@ import Image from 'next/image';
 import Link from 'next/link';
 
 export default async function Home() {
-  const res = await fetch('http://127.0.0.1:1337/api/habers?populate=*', { cache: 'no-store' });
+  // Vercel'e girdiğimiz canlı linki oku, eğer bulamazsa yereldeki adresi fallback (yedek) olarak kullan
+  const strapiUrl = process.env.NEXT_PUBLIC_STRAPI_URL || 'http://127.0.0.1:1337';
+
+  // Canlıda patlamaması için fetch adresini dinamik yaptık
+  const res = await fetch(`${strapiUrl}/api/habers?populate=*`, { cache: 'no-store' });
   const veri = await res.json();
   const haberler = veri.data;
 
@@ -14,9 +18,13 @@ export default async function Home() {
   const altHaberler = haberler.slice(1);
 
   const getImageUrl = (haber: any) => {
-    return haber.KapakGorseli?.[0]?.url 
-      ? `http://127.0.0.1:1337${haber.KapakGorseli[0].url}` 
-      : null;
+    const url = haber.KapakGorseli?.[0]?.url;
+    if (!url) return null;
+    
+    // Mühendislik Dokunuşu: Strapi Cloud resimleri tam link (http...) olarak verebilir. 
+    // Eğer link tam geliyorsa direkt kullan, relative (kısa) geliyorsa başına sunucu adresini ekle.
+    if (url.startsWith('http')) return url;
+    return `${strapiUrl}${url}`;
   };
 
   const mansetGorsel = getImageUrl(manset);
