@@ -5,11 +5,16 @@ export default async function KategoriSayfasi({ params }: { params: Promise<{ id
   const resolvedParams = await params;
   const categoryId = resolvedParams.id;
 
-  const catRes = await fetch(`http://127.0.0.1:1337/api/kategoris/${categoryId}`, { cache: 'no-store' });
+  // Vercel'deki canlı Strapi URL'ini oku, yoksa yereli fallback kullan
+  const strapiUrl = process.env.NEXT_PUBLIC_STRAPI_URL || 'http://127.0.0.1:1337';
+
+  // Kategoriyi canlı adresten çekiyoruz
+  const catRes = await fetch(`${strapiUrl}/api/kategoris/${categoryId}`, { cache: 'no-store' });
   const catVeri = await catRes.json();
   const kategoriAdi = catVeri.data?.Ad || 'Kategori';
 
-  const habRes = await fetch(`http://127.0.0.1:1337/api/habers?filters[kategori][documentId][$eq]=${categoryId}&populate=*`, { cache: 'no-store' });
+  // Haberleri canlı adresten filtreleyerek çekiyoruz
+  const habRes = await fetch(`${strapiUrl}/api/habers?filters[kategori][documentId][$eq]=${categoryId}&populate=*`, { cache: 'no-store' });
   const habVeri = await habRes.json();
   const haberler = habVeri.data || [];
 
@@ -30,8 +35,10 @@ export default async function KategoriSayfasi({ params }: { params: Promise<{ id
       ) : (
         <section className="grid gap-10 md:grid-cols-2 lg:grid-cols-3">
           {haberler.map((haber: any) => {
-            const imageUrl = haber.KapakGorseli?.[0]?.url 
-              ? `http://127.0.0.1:1337${haber.KapakGorseli[0].url}` 
+            const url = haber.KapakGorseli?.[0]?.url;
+            // Strapi Cloud CDN linki tam geliyorsa direkt kullan, relative geliyorsa dinamik url ile birleştir
+            const imageUrl = url 
+              ? (url.startsWith('http') ? url : `${strapiUrl}${url}`) 
               : null;
 
             return (

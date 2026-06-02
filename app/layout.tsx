@@ -10,14 +10,14 @@ export const metadata: Metadata = {
   description: 'Gündem, teknoloji ve sinema dünyasından en güncel gelişmeler.',
 };
 
-// layout.tsx artık "async" bir Server Component, yani veri çekebilir!
 export default async function RootLayout({ children }: { children: React.ReactNode }) {
+  // Vercel'deki canlı Strapi linkini oku, yoksa yereli fallback kullan
+  const strapiUrl = process.env.NEXT_PUBLIC_STRAPI_URL || 'http://127.0.0.1:1337';
   
-  // Strapi'den kategorileri dinamik olarak çekiyoruz
   let kategoriler = [];
   try {
-    // API endpointimiz 'kategoris' (Strapi İngilizce çoğul eki 's' ekler)
-    const res = await fetch('http://127.0.0.1:1337/api/kategoris', { cache: 'no-store' });
+    // Kategorileri de artık canlı sunucumuz üzerinden çekiyoruz
+    const res = await fetch(`${strapiUrl}/api/kategoris`, { cache: 'no-store' });
     const veri = await res.json();
     kategoriler = veri.data || [];
   } catch (error) {
@@ -38,7 +38,6 @@ export default async function RootLayout({ children }: { children: React.ReactNo
                 </Link>
               </div>
               
-              {/* İŞTE SİHRİN GERÇEKLEŞTİĞİ YER: Kategorileri Otomatik Diziyoruz */}
               <nav className="hidden md:flex space-x-8 font-semibold text-sm tracking-wide text-blue-100">
                 {kategoriler.map((kategori: any) => (
                   <Link 
